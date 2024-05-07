@@ -7,11 +7,13 @@ public class SerializableAction : ISerializable
 {
     private readonly byte[] _targetData;
     private readonly string _methodName;
+    private readonly string[] _genericTypeArgumentNames;
 
     public SerializableAction(Delegate action)
     {
         _methodName = action.Method.Name;
         _targetData = SerializeTarget(action.Target);
+        _genericTypeArgumentNames = action.Method.GetGenericArguments().Select(t => t.FullName).ToArray();
     }
 
     protected SerializableAction(SerializationInfo info, StreamingContext context)
@@ -21,6 +23,7 @@ public class SerializableAction : ISerializable
 
         _methodName = info.GetString("MethodName");
         _targetData = (byte[])info.GetValue("TargetData", typeof(byte[]));
+        _genericTypeArgumentNames = (string[])info.GetValue("GenericTypeArgumentNames", typeof(string[]));
     }
 
     public void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -30,15 +33,22 @@ public class SerializableAction : ISerializable
 
         info.AddValue("MethodName", _methodName);
         info.AddValue("TargetData", _targetData);
+        info.AddValue("GenericTypeArgumentNames", _genericTypeArgumentNames);
     }
 
     public void Invoke(params object[] args)
     {
         object target = DeserializeTarget(_targetData);
         MethodInfo method = target.GetType().GetMethod(_methodName);
-        // MethodInfo genericMethod = method.MakeGenericMethod(args.Select(a => a.GetType()).ToArray());
-        // genericMethod.Invoke(target, args);
-        method.Invoke(target, args);
+        if (_genericTypeArgumentNames.Length > 0)
+        {
+            MethodInfo genericMethod = method.MakeGenericMethod(_genericTypeArgumentNames.Select(name => Type.GetType(name)).ToArray());
+            genericMethod.Invoke(target, args);
+        }
+        else
+        {
+            method.Invoke(target, args);
+        }
     }
 
     private static byte[] SerializeTarget(object target)

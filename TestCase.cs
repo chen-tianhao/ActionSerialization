@@ -3,7 +3,7 @@
 [Serializable]
 public class MyClass
 {
-    // public SerializableAction MyAction { get; set; }
+    public SerializableAction MyAction { get; set; }
     public SerializableAction MyAction1 { get; set; }
     public SerializableAction MyAction2 { get; set; }
     public SerializableAction MyAction3 { get; set; }
@@ -31,7 +31,7 @@ class TestCase
     static void Main()
     {
         var obj = new MyClass();
-        // obj.MyAction = new SerializableAction(new Action<string>(obj.MyMethod<string>));
+        obj.MyAction = new SerializableAction(new Action<string>(obj.MyMethod<string>));
         obj.MyAction1 = new SerializableAction(new Action<string>(obj.MyFunc1));
         obj.MyAction2 = new SerializableAction(new Action(obj.MyFunc2));
         obj.MyAction3 = new SerializableAction(new Action<int, string>(obj.MyFunc3));
@@ -41,7 +41,7 @@ class TestCase
         Console.WriteLine(serialized);
 
         var deserialized = JsonConvert.DeserializeObject<MyClass>(serialized);
-        // deserialized.MyAction.Invoke("Hello, Method");
+        deserialized.MyAction.Invoke("Hello, Method");
         deserialized.MyAction1.Invoke("Hello, Func");
         deserialized.MyAction2.Invoke();
         deserialized.MyAction3.Invoke(999, "AAA");
